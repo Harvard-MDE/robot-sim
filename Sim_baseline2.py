@@ -1,13 +1,14 @@
 '''A Python Class to implement a very basic Pygame Plotting
 Arena. Plot various objects, animate them, scaling, dealing
 with mouse inputs, Updating etc'''
+from prompt_toolkit import print_formatted_text
 import pygame, sys, math
 from pygame.locals import *
 import Sprites as spr
 import random
 import time
-from projects.multirobot_searchandrescue.searcherFSM import SearcherFSM
 from time import strftime,gmtime
+
 
 class PyArena:
     def __init__(self, w = 800,h = 800, bgColor = "White", axisColor = "Red", TIMER_DELAY = 30):
@@ -133,6 +134,11 @@ class PyArena:
         self.goals = []
         self.goals.append(goal)
 
+    
+    def Random_Walk(self):
+        return (random.randint(-400, 400), random.randint(-400, 400))
+
+
     def Update(self):
         '''Perform all mandatory repeated tasks'''
        #Deal with user inputs
@@ -170,6 +176,13 @@ class PyArena:
         for pos in t:
             nObs = len(self.obstacles) # New sprite will have ID = len(obstacles) + 1
             self.obstacles.append(spr.Sprite(nObs + 1, pos)) # Add an obstacle at the mouse position
+    
+    def Distance2D(self, p1, p2):
+        '''Returns the 2D distance between two points'''
+        x1, y1 = p1[0], p1[1]
+        x2, y2 = p2[0], p2[1]
+        d = math.sqrt(math.pow(x1 - x2,2) + math.pow(y1 - y2,2))
+        return d
 
 if __name__ == "__main__":
     ################################ SIM setup ################################
@@ -202,9 +215,10 @@ if __name__ == "__main__":
     arena1.AddDebugObstacles(navigation_interior_obstacles)
 
     ################################ SIM core ################################
+    
+    print('################### SIM: Random Walk Hunting with eyes ###################')
     dt_gmt = strftime("%Y-%m-%d %H:%M:%S", gmtime())
     print('Started at:', dt_gmt)
-    print('################### SIM: Coverage ###################')
     SIM_status = 'patrolling'
     # Add robot 1
     pos = arena1.WH2XY((750,750))
@@ -214,113 +228,43 @@ if __name__ == "__main__":
     rob1.SetSpeed(5)
     rob1.SetSensor(300, 70)
     # CS286: Calculate goals from project algorithm
-    ros1 = SearcherFSM(0)
-    goal1 = arena1.MapToSimCanvas(ros1.loop(SIM_status)) 
-    rob1.SetGoal(goal1)
+    # ros1 = SearcherFSM(0)
+    # goal1 = arena1.MapToSimCanvas(ros1.loop(SIM_status)) 
     arena1.robots.append(rob1)
 
-    
-    # Add robot 2
-    rob2 = spr.GoalSeeker(1000, pos)
-    rob2.SetImage("images/cat2.png")
-    rob2.SetHeading(random.randint(0,360))
-    rob2.SetSpeed(5)
-    rob2.SetSensor(300, 70)
-    ros2 = SearcherFSM(1)
-    goal2 = arena1.MapToSimCanvas(ros2.loop(SIM_status))
-    rob2.SetGoal(goal2)
-    arena1.robots.append(rob2)
-
-    # Add robot 3
-    rob3 = spr.GoalSeeker(1000, pos)
-    rob3.SetImage("images/cat3.png")
-    rob3.SetHeading(random.randint(0,360))
-    rob3.SetSpeed(5)
-    rob3.SetSensor(300, 70)
-    ros3 = SearcherFSM(2)
-    goal3 = arena1.MapToSimCanvas(ros3.loop(SIM_status))
-    rob3.SetGoal(goal3)
-    arena1.robots.append(rob3)
-
-    while True:
-        arena1.Update()
-        bot = arena1.GetBot(0) 
-        bot.StepForward(1)
-        time.sleep(0.2)
-        if rob1.runMode == 'Finished':
-            break
-
-    while True:
-        arena1.Update()
-        bot = arena1.GetBot(1) 
-        bot.StepForward(1)
-        time.sleep(0.2)
-        if rob2.runMode == 'Finished':
-            break
-
-    while True:
-        arena1.Update()
-        bot = arena1.GetBot(2) 
-        bot.StepForward(1)
-        time.sleep(0.2)
-        if rob3.runMode == 'Finished':
-            break
-
-
-    SIM_status = 'listening'
-    print('################### SIM: Listening ###################')
-    time.sleep(2)
-      # Add a target - Simulating TX / Mouse
+    # Add target 1
     tx = (700,100)
     pos = arena1.WH2XY(tx) # Mouse target loc
     target1 = spr.Sprite(500, pos) 
-    target1.SetImage("images/mouse1.png")
+    target1.SetImage("images/mouse2.png")
     arena1.goals.append(target1) # Gloabal hunting
 
-    aoa_strength1 = (1, ros1.loop(SIM_status, goal1, tx))
-    aoa_strength2 = (2, ros2.loop(SIM_status, goal2, tx))
-    aoa_strength3 = (3, ros3.loop(SIM_status, goal3, tx))
-    aoa_signals = []
-    aoa_signals.append(aoa_strength1)
-    aoa_signals.append(aoa_strength2)
-    aoa_signals.append(aoa_strength3)
 
-    print('################### SIM: Hunting ###################')
-    rob_hunter_ranking = arena1.CompareAOAStrength(aoa_signals) 
-    picker = [x[0] for x in rob_hunter_ranking] # Callback?
-    print('Hunter Pick: locobot', picker[0])
-    if picker[0] == 1:
-        rob1.SetGoal(target1.GetPos())
+    rescue = (0, 0)
+    
+    print('tx:', pos)
+    print('rob1 initial distance:', arena1.Distance2D(rescue, pos))
+    print('rob1.sensor_range:', rob1.sensor_range)
+    while arena1.Distance2D(rescue, pos) > rob1.sensor_range/2: # Within robot visable range
+        # New goal
+        rescue = arena1.Random_Walk()
+        print('New Goal:', rescue)
+        rob1.SetGoal(rescue)
         rob1.SetSpeed(5)
-        while True:
+        while rob1.runMode != 'Finished':
             arena1.Update()
             bot = arena1.GetBot(0)
             bot.StepForward(1)
             time.sleep(0.2)
-            if rob1.runMode == 'Finished':
-                break
-    elif picker[0] == 2:
-        rob2.SetGoal(target1.GetPos())
-        rob2.SetSpeed(5)
-        while True:
-            arena1.Update()
-            bot = arena1.GetBot(1)
-            bot.StepForward(1)
-            time.sleep(0.2)
-            if rob2.runMode == 'Finished':
-                break
-    elif picker[0] == 3:
-        rob3.SetGoal(target1.GetPos())
-        rob3.SetSpeed(5)
-        while True:
-            arena1.Update()
-            bot = arena1.GetBot(2)
-            bot.StepForward(1)
-            time.sleep(0.2)
-            if rob3.runMode == 'Finished':
-                break 
-
-    dt_gmt = strftime("%Y-%m-%d %H:%M:%S", gmtime())
-    print('Finished at:', dt_gmt)
-    
-    
+            if arena1.Distance2D(rescue, pos) <= rob1.sensor_range/2: # Expected run once - Termination
+                rob1.SetGoal(target1.GetPos())
+                rob1.SetSpeed(10)
+                rescue = pos
+                print('Find mouse!', rescue)
+                while rob1.runMode != 'Finished':
+                    arena1.Update()
+                    bot = arena1.GetBot(0)
+                    bot.StepForward(1)
+                    time.sleep(0.2)
+                dt_gmt = strftime("%Y-%m-%d %H:%M:%S", gmtime())
+                print('Finished at:', dt_gmt)
