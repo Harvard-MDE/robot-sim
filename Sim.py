@@ -319,8 +319,9 @@ if __name__ == "__main__":
             time.sleep(0.2)
             if rob3.runMode == 'Finished':
                 break 
-
+    time.sleep(3)
     dt_gmt = strftime("%Y-%m-%d %H:%M:%S", gmtime())
     print('Finished at:', dt_gmt)
+
     
     
