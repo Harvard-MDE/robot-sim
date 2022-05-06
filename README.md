@@ -13,7 +13,7 @@ Features including:
 
 > pip install pygame -g
     
-> pytohn Sim.py
+> python Sim.py
     
 > Enjoy!
 
