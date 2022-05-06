@@ -10,7 +10,10 @@ Features including:
 - Flexible to be modified: i.e. dealing with mouse inputs, real-time updating etc. 
 
 # Getting started
+
 > pip install pygame -g
+    
 > pytohn Sim.py
+    
 > Enjoy!
 
