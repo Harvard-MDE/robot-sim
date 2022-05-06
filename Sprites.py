@@ -279,7 +279,7 @@ class GoalSeeker(Robot):
         f3 = Distance2D(self.goal, self.pos) < self.goalDistFromTrap # Closer to goal than at trap point
         f4 = not(f3) and len(self.visible_obstacles) == 0 # We cleared the trap from the opposite side
         
-        print('ClearOfTrap:', f1, f2, f3)
+        # print('ClearOfTrap:', f1, f2, f3)
 
         if (f1 * f2 * f3) or f4: # If all three conditions are met.....
             self.trapHistory = [] # we are no longer trapped
