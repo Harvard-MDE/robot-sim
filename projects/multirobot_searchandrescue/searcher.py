@@ -110,7 +110,7 @@ class Searcher:
         # (We assume the distance has negative cooralation with the AOA signal strength)
         print(self.topic + ": " + "UPDATING AOA READING")
         self.aoa_strength = math.sqrt(pow(cat[0]-mouse[0],2) + pow(cat[1]-mouse[1],2))
-        print(self.topic + ": " +"Calculate aoa_strength:" + str(self.aoa_strength))
+        print(self.topic + ": " +"Calculate aoa_strength (normalized):" + str(1000-self.aoa_strength))
         return self.aoa_strength
 
         
